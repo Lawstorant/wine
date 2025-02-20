@@ -110,6 +110,7 @@ MAKE_FUNCPTR(SDL_HapticStopAll);
 MAKE_FUNCPTR(SDL_HapticStopEffect);
 MAKE_FUNCPTR(SDL_HapticUnpause);
 MAKE_FUNCPTR(SDL_HapticUpdateEffect);
+MAKE_FUNCPTR(SDL_HapticNumAxes);
 MAKE_FUNCPTR(SDL_JoystickIsHaptic);
 MAKE_FUNCPTR(SDL_GameControllerAddMapping);
 MAKE_FUNCPTR(SDL_RegisterEvents);
@@ -201,6 +202,7 @@ static void set_hat_value(struct unix_device *iface, int index, int value)
 static BOOL descriptor_add_haptic(struct sdl_device *impl, BOOL force)
 {
     USHORT i, count = 0;
+    SHORT naxes;
     USAGE usages[16];
 
     if (impl->axis_offset > 0 || !pSDL_JoystickIsHaptic(impl->sdl_joystick) ||
@@ -238,7 +240,13 @@ static BOOL descriptor_add_haptic(struct sdl_device *impl, BOOL force)
         if (force || (impl->effect_support & SDL_HAPTIC_CONSTANT)) usages[count++] = PID_USAGE_ET_CONSTANT_FORCE;
         if (force || (impl->effect_support & SDL_HAPTIC_RAMP)) usages[count++] = PID_USAGE_ET_RAMP;
 
-        if (!hid_device_add_physical(&impl->unix_device, usages, count))
+        /* Get the number of FFB-enabled axes and hardcode to 2 in case of error.
+         * (previously hardcoded number of FFB axes) */
+        naxes = pSDL_HapticNumAxes(impl->sdl_haptic);
+        if (naxes < 0)
+            naxes = 2;
+
+        if (!hid_device_add_physical(&impl->unix_device, usages, count, naxes))
             return FALSE;
     }
 
@@ -1136,6 +1144,7 @@ NTSTATUS sdl_bus_init(void *args)
     LOAD_FUNCPTR(SDL_HapticStopEffect);
     LOAD_FUNCPTR(SDL_HapticUnpause);
     LOAD_FUNCPTR(SDL_HapticUpdateEffect);
+    LOAD_FUNCPTR(SDL_HapticNumAxes);
     LOAD_FUNCPTR(SDL_JoystickIsHaptic);
     LOAD_FUNCPTR(SDL_GameControllerAddMapping);
     LOAD_FUNCPTR(SDL_RegisterEvents);

@@ -800,11 +800,16 @@ static BOOL hid_descriptor_add_set_ramp_force(struct unix_device *iface)
     return hid_report_descriptor_append(desc, template, sizeof(template));
 }
 
-BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT count)
+BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT count, USHORT naxes)
 {
     struct hid_report_descriptor *desc = &iface->hid_report_descriptor;
     const BYTE device_control_report = ++desc->next_report_id[HidP_Output];
     struct hid_device_state *state = &iface->hid_device_state;
+
+    /* Only define as many axes as supported */
+    if (naxes > PID_AXES_MAX)
+        naxes = PID_AXES_MAX;
+
     const BYTE device_control_header[] =
     {
         USAGE_PAGE(1, HID_USAGE_PAGE_PID),
@@ -901,7 +906,7 @@ BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT co
             USAGE(1, PID_USAGE_EFFECT_TYPE),
             COLLECTION(1, Logical),
     };
-    const BYTE effect_update_footer[] =
+    const BYTE effect_update_middle1[] =
     {
                 LOGICAL_MINIMUM(1, 1),
                 LOGICAL_MAXIMUM(1, count),
@@ -939,12 +944,22 @@ BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT co
 
             USAGE(1, PID_USAGE_AXES_ENABLE),
             COLLECTION(1, Logical),
+    };
+    const BYTE effect_update_axes_enable[] =
+    {
                 USAGE(4, (state->abs_axis_usages[0].UsagePage<<16)|state->abs_axis_usages[0].Usage),
                 USAGE(4, (state->abs_axis_usages[1].UsagePage<<16)|state->abs_axis_usages[1].Usage),
+                USAGE(4, (state->abs_axis_usages[2].UsagePage<<16)|state->abs_axis_usages[2].Usage),
+                USAGE(4, (state->abs_axis_usages[3].UsagePage<<16)|state->abs_axis_usages[3].Usage),
+                USAGE(4, (state->abs_axis_usages[4].UsagePage<<16)|state->abs_axis_usages[4].Usage),
+                USAGE(4, (state->abs_axis_usages[5].UsagePage<<16)|state->abs_axis_usages[5].Usage),
+    };
+    const BYTE effect_update_middle2[] =
+    {
                 LOGICAL_MINIMUM(1, 0),
                 LOGICAL_MAXIMUM(1, 1),
                 REPORT_SIZE(1, 1),
-                REPORT_COUNT(1, 2),
+                REPORT_COUNT(1, naxes),
                 OUTPUT(1, Data|Var|Abs),
             END_COLLECTION,
             USAGE(1, PID_USAGE_DIRECTION_ENABLE),
@@ -955,14 +970,24 @@ BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT co
 
             USAGE(1, PID_USAGE_DIRECTION),
             COLLECTION(1, Logical),
+    };
+    const BYTE effect_update_direction[] =
+    {
                 USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|1),
                 USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|2),
+                USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|3),
+                USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|4),
+                USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|5),
+                USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|6),
+    };
+    const BYTE effect_update_footer[] =
+    {
                 UNIT(1, 0x14), /* Eng Rot:Angular Pos */
                 UNIT_EXPONENT(1, -2),
                 LOGICAL_MINIMUM(1, 0),
                 LOGICAL_MAXIMUM(4, 35900),
                 REPORT_SIZE(1, 16),
-                REPORT_COUNT(1, 2),
+                REPORT_COUNT(1, naxes),
                 OUTPUT(1, Data|Var|Abs),
             END_COLLECTION,
             UNIT_EXPONENT(1, 0),
@@ -1033,6 +1058,23 @@ BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT co
         if (!hid_report_descriptor_append_usage(desc, usages[i]))
             return FALSE;
     }
+
+    if (!hid_report_descriptor_append(desc, effect_update_middle1, sizeof(effect_update_middle1)))
+        return FALSE;
+
+    /* Pass all defined axes but only copy the needed number */
+    ULONG size;
+    size = sizeof(effect_update_axes_enable) / PID_AXES_MAX * naxes;
+    if (!hid_report_descriptor_append(desc, effect_update_axes_enable, size))
+        return FALSE;
+
+    if (!hid_report_descriptor_append(desc, effect_update_middle2, sizeof(effect_update_middle2)))
+        return FALSE;
+
+    size = sizeof(effect_update_direction) / PID_AXES_MAX * naxes;
+    if (!hid_report_descriptor_append(desc, effect_update_direction, size))
+        return FALSE;
+
     if (!hid_report_descriptor_append(desc, effect_update_footer, sizeof(effect_update_footer)))
         return FALSE;
 
