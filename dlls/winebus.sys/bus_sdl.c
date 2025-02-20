@@ -110,6 +110,7 @@ MAKE_FUNCPTR(SDL_HapticStopAll);
 MAKE_FUNCPTR(SDL_HapticStopEffect);
 MAKE_FUNCPTR(SDL_HapticUnpause);
 MAKE_FUNCPTR(SDL_HapticUpdateEffect);
+MAKE_FUNCPTR(SDL_HapticNumAxes);
 MAKE_FUNCPTR(SDL_JoystickIsHaptic);
 MAKE_FUNCPTR(SDL_GameControllerAddMapping);
 MAKE_FUNCPTR(SDL_RegisterEvents);
@@ -200,6 +201,7 @@ static void set_hat_value(struct unix_device *iface, int index, int value)
 
 static BOOL descriptor_add_haptic(struct sdl_device *impl, BOOL force)
 {
+    LONG num_axes;
     USHORT i, count = 0;
     USAGE usages[16];
 
@@ -226,7 +228,7 @@ static BOOL descriptor_add_haptic(struct sdl_device *impl, BOOL force)
 
     if ((impl->effect_support & EFFECT_SUPPORT_PHYSICAL))
     {
-        /* SDL_HAPTIC_SQUARE doesn't exist */
+        /* SDL_HAPTIC_SQUARE doesn't exist in SDL2 */
         if (force || (impl->effect_support & SDL_HAPTIC_SINE)) usages[count++] = PID_USAGE_ET_SINE;
         if (force || (impl->effect_support & SDL_HAPTIC_TRIANGLE)) usages[count++] = PID_USAGE_ET_TRIANGLE;
         if (force || (impl->effect_support & SDL_HAPTIC_SAWTOOTHUP)) usages[count++] = PID_USAGE_ET_SAWTOOTH_UP;
@@ -238,7 +240,13 @@ static BOOL descriptor_add_haptic(struct sdl_device *impl, BOOL force)
         if (force || (impl->effect_support & SDL_HAPTIC_CONSTANT)) usages[count++] = PID_USAGE_ET_CONSTANT_FORCE;
         if (force || (impl->effect_support & SDL_HAPTIC_RAMP)) usages[count++] = PID_USAGE_ET_RAMP;
 
-        if (!hid_device_add_physical(&impl->unix_device, usages, count))
+        /* Get the number of FFB-enabled axes and hardcode to 2 in case of error.
+         * (previously hardcoded number of FFB axes) */
+        num_axes = pSDL_HapticNumAxes(impl->sdl_haptic);
+        if (num_axes < 0)
+            num_axes = 2;
+
+        if (!hid_device_add_physical(&impl->unix_device, usages, count, num_axes))
             return FALSE;
     }
 
@@ -1136,6 +1144,7 @@ NTSTATUS sdl_bus_init(void *args)
     LOAD_FUNCPTR(SDL_HapticStopEffect);
     LOAD_FUNCPTR(SDL_HapticUnpause);
     LOAD_FUNCPTR(SDL_HapticUpdateEffect);
+    LOAD_FUNCPTR(SDL_HapticNumAxes);
     LOAD_FUNCPTR(SDL_JoystickIsHaptic);
     LOAD_FUNCPTR(SDL_GameControllerAddMapping);
     LOAD_FUNCPTR(SDL_RegisterEvents);
