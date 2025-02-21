@@ -945,7 +945,7 @@ BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT co
             USAGE(1, PID_USAGE_AXES_ENABLE),
             COLLECTION(1, Logical),
     };
-    const BYTE effect_update_axes_enable[] =
+    const BYTE effect_update_axes_enable[PID_AXES_MAX] =
     {
                 USAGE(4, (state->abs_axis_usages[0].UsagePage<<16)|state->abs_axis_usages[0].Usage),
                 USAGE(4, (state->abs_axis_usages[1].UsagePage<<16)|state->abs_axis_usages[1].Usage),
@@ -971,7 +971,7 @@ BOOL hid_device_add_physical(struct unix_device *iface, USAGE *usages, USHORT co
             USAGE(1, PID_USAGE_DIRECTION),
             COLLECTION(1, Logical),
     };
-    const BYTE effect_update_direction[] =
+    const BYTE effect_update_direction[PID_AXES_MAX] =
     {
                 USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|1),
                 USAGE(4, (HID_USAGE_PAGE_ORDINAL<<16)|2),
