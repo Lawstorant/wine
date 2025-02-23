@@ -246,9 +246,10 @@ static BOOL descriptor_add_haptic(struct sdl_device *impl, BOOL force)
         if (naxes < 0)
             naxes = 2;
 
-        impl->unix_device.hid_physical.num_axes = naxes;
         if (!hid_device_add_physical(&impl->unix_device, usages, count, naxes))
             return FALSE;
+            
+        impl->unix_device.hid_physical.num_axes = naxes;
     }
 
     impl->haptic_effect_id = -1;
