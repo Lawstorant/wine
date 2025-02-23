@@ -181,6 +181,7 @@ struct hid_physical
     BYTE set_condition_report;
     BYTE set_constant_force_report;
     BYTE set_ramp_force_report;
+    USHORT num_axes;
 
     struct hid_effect_state effect_state;
 };

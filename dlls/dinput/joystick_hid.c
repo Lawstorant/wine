@@ -69,8 +69,8 @@ struct pid_effect_update
     UINT axis_count;
     UINT direction_coll;
     UINT direction_count;
-    struct hid_value_caps *axis_caps[6];
-    struct hid_value_caps *direction_caps[6];
+    struct hid_value_caps *axis_caps[PID_AXES_MAX];
+    struct hid_value_caps *direction_caps[PID_AXES_MAX];
     struct hid_value_caps *duration_caps;
     struct hid_value_caps *gain_caps;
     struct hid_value_caps *sample_period_caps;
@@ -1852,7 +1852,7 @@ static BOOL init_pid_caps( struct dinput_device *device, UINT index, struct hid_
     if (instance->wCollectionNumber == effect_update->axes_coll)
     {
         SET_REPORT_ID( effect_update );
-        if (effect_update->axis_count >= 6) FIXME( "more than 6 PID axes detected\n" );
+        if (effect_update->axis_count >= PID_AXES_MAX) FIXME( "more than %d PID axes detected\n", PID_AXES_MAX );
         else effect_update->axis_caps[effect_update->axis_count] = caps;
         effect_update->axis_count++;
     }
@@ -1861,7 +1861,7 @@ static BOOL init_pid_caps( struct dinput_device *device, UINT index, struct hid_
         SET_REPORT_ID( effect_update );
         caps->physical_min = 0;
         caps->physical_max = 35900;
-        if (effect_update->direction_count >= 6) FIXME( "more than 6 PID directions detected\n" );
+        if (effect_update->direction_count >= PID_AXES_MAX) FIXME( "more than %d PID directions detected\n", PID_AXES_MAX );
         else effect_update->direction_caps[effect_update->direction_count] = caps;
         effect_update->direction_count++;
     }

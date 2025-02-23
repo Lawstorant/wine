@@ -1229,6 +1229,7 @@ static void hid_device_set_output_report(struct unix_device *iface, HID_XFER_PAC
         struct pid_effect_update *report = (struct pid_effect_update *)(packet->reportBuffer + 1);
         struct effect_params *params = iface->hid_physical.effect_params + report->index;
         USAGE effect_type;
+        USHORT i;
 
         io->Information = sizeof(*report) + 1;
         if (packet->reportBufferLen < io->Information)
@@ -1246,11 +1247,13 @@ static void hid_device_set_output_report(struct unix_device *iface, HID_XFER_PAC
             params->start_delay = report->start_delay;
             params->gain_percent = report->gain_percent;
             params->trigger_button = report->trigger_button == 0xff ? 0 : report->trigger_button;
-            params->axis_enabled[0] = (report->enable_bits & 1) != 0;
-            params->axis_enabled[1] = (report->enable_bits & 2) != 0;
-            params->direction_enabled = (report->enable_bits & 4) != 0;
-            params->direction[0] = report->direction[0];
-            params->direction[1] = report->direction[1];
+
+            for (i = 0; i < physical->num_axes; ++i)
+                params->axis_enabled[i] = (report->enable_bits & (1 << i)) != 0;
+            params->direction_enabled = (report->enable_bits & (1 << i)) != 0;
+
+            for (i = 0; i < physical->num_axes; ++i)
+                params->direction[i] = report->direction[i];
 
             io->Status = iface->hid_vtbl->physical_effect_update(iface, report->index, params);
         }
