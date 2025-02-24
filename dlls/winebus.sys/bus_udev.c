@@ -651,8 +651,6 @@ static NTSTATUS build_report_descriptor(struct unix_device *iface, struct udev_d
         // Hardocde 2 for now until Linux FF api exposes number of FFB axes
         if (!hid_device_add_physical(iface, usages, count, 2))
             return STATUS_NO_MEMORY;
-            
-        iface->hid_physical.num_axes = 2;
     }
 
     if (!hid_device_end_report_descriptor(iface))

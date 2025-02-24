@@ -221,11 +221,11 @@ struct hid_joystick_effect
     struct list entry;
     struct hid_joystick *joystick;
 
-    DWORD axes[6];
-    LONG directions[6];
+    DWORD axes[PID_AXES_MAX];
+    LONG directions[PID_AXES_MAX];
     DICONSTANTFORCE constant_force;
     DIRAMPFORCE ramp_force;
-    DICONDITION condition[6];
+    DICONDITION condition[PID_AXES_MAX];
     DIENVELOPE envelope;
     DIPERIODIC periodic;
     DIEFFECT params;
