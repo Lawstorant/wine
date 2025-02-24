@@ -2374,7 +2374,7 @@ static void convert_directions_from_spherical( const DIEFFECT *in, DIEFFECT *out
 static void convert_directions( const DIEFFECT *in, DIEFFECT *out )
 {
     DWORD direction_flags = DIEFF_CARTESIAN | DIEFF_POLAR | DIEFF_SPHERICAL;
-    LONG directions[6] = {0};
+    LONG directions[PID_AXES_MAX] = {0};
     DIEFFECT spherical = {.rglDirection = directions};
 
     switch (in->dwFlags & direction_flags)
