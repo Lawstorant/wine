@@ -3661,30 +3661,33 @@ done:
 
 static void test_condition_effect_six_axes( IDirectInputDevice8W *device, HANDLE file, DWORD version )
 {
-    // struct hid_expect expect_create[] =
-    // {
-    //     /* set condition */
-    //     {
-    //         .code = IOCTL_HID_WRITE_REPORT,
-    //         .report_id = 7,
-    //         .report_len = 8,
-    //         .report_buf = {0x07,0x01,0x00,0x00,0x00,0x00,0x00,0x00},
-    //     },
-    //     /* set condition */
-    //     {
-    //         .code = IOCTL_HID_WRITE_REPORT,
-    //         .report_id = 7,
-    //         .report_len = 8,
-    //         .report_buf = {0x07,0x01,0x00,0x00,0x00,0x00,0x00,0x00},
-    //     },
-    //     /* update effect */
-    //     {
-    //         .code = IOCTL_HID_WRITE_REPORT,
-    //         .report_id = 3,
-    //         .report_len = 8,
-    //         .report_buf = {0x03,0x01,0x03,0x40,0x01,0x00,0x00,0x00},
-    //     },
-    // };
+    struct hid_expect expect_create[] =
+    {
+        /* set condition */
+        {
+            .code = IOCTL_HID_WRITE_REPORT,
+            .report_id = 7,
+            .report_len = 8,
+            .report_buf = {0x07,0x01,0x00,0x00,0x00,0x00,0x00,0x00},
+            .todo = true,
+        },
+        /* set condition */
+        {
+            .code = IOCTL_HID_WRITE_REPORT,
+            .report_id = 7,
+            .report_len = 8,
+            .report_buf = {0x07,0x01,0x00,0x00,0x00,0x00,0x00,0x00},
+            .todo = true,
+        },
+        /* update effect */
+        {
+            .code = IOCTL_HID_WRITE_REPORT,
+            .report_id = 3,
+            .report_len = 8,
+            .report_buf = {0x03,0x01,0x03,0x40,0x01,0x00,0x00,0x00},
+            .todo = true,
+        },
+    };
     static const DWORD expect_axes[2] =
     {
         DIDFT_ABSAXIS | DIDFT_MAKEINSTANCE( 4 ) | DIDFT_FFACTUATOR,
@@ -3748,10 +3751,10 @@ static void test_condition_effect_six_axes( IDirectInputDevice8W *device, HANDLE
     ULONG ref;
     GUID guid;
 
-    // set_hid_expect( file, expect_create, sizeof(expect_create) );
+    set_hid_expect( file, expect_create, sizeof(expect_create) );
     hr = IDirectInputDevice8_CreateEffect( device, &GUID_Spring, &expect_desc, &effect, NULL );
     ok( hr == DI_OK, "CreateEffect returned %#lx\n", hr );
-    // set_hid_expect( file, NULL, 0 );
+    set_hid_expect( file, NULL, 0 );
 
     check_params.expect_effect = effect;
     hr = IDirectInputDevice8_EnumCreatedEffectObjects( device, check_created_effect_objects, &check_params, 0 );
